@@ -17,8 +17,12 @@ def get_members(update, context):
     
     try:
         # Get the list of members in the group
-        members = context.bot.get_chat_members_count(group_id)
-        update.message.reply_text(f"The group {group_id} has {members} members.")
+        members = context.bot.get_chat_members(group_id)
+        member_usernames = [member.user.username for member in members if member.user.username is not None]
+        member_count = len(member_usernames)
+        usernames_text = "\n".join(member_usernames)
+        reply_text = f"The group {group_id} has {member_count} members:\n\n{usernames_text}"
+        update.message.reply_text(reply_text)
     except Exception as e:
         update.message.reply_text("Error fetching members. Please check the group ID and try again.")
 
