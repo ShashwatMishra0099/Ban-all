@@ -1,16 +1,17 @@
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters
 from telegram import ChatAction
 
 # Replace 'TOKEN' with your actual bot token
 TOKEN = '6497404744:AAE9vw1gG1nXczJPFYKCBa_VaQAh-R2LfyU'
 
+ENTER_GROUP_ID = 0
+
+def start(update, context):
+    update.message.reply_text("Please enter the group ID to get the member count and usernames.")
+    return ENTER_GROUP_ID
+
 def get_members(update, context):
-    # Check if the command has the group ID
-    if len(context.args) != 1:
-        update.message.reply_text("Please provide the group ID.")
-        return
-    
-    group_id = context.args[0]
+    group_id = update.message.text
     
     # Send typing action while fetching members
     update.message.chat.send_action(ChatAction.TYPING)
@@ -26,10 +27,21 @@ def get_members(update, context):
     except Exception as e:
         update.message.reply_text("Error fetching members. Please check the group ID and try again.")
 
+    return ConversationHandler.END
+
 def main():
     updater = Updater(TOKEN, use_context=True)
     dp = updater.dispatcher
-    dp.add_handler(CommandHandler("getmembers", get_members))
+
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('getmembers', start)],
+        states={
+            ENTER_GROUP_ID: [MessageHandler(Filters.text & ~Filters.command, get_members)]
+        },
+        fallbacks=[]
+    )
+
+    dp.add_handler(conv_handler)
     updater.start_polling()
     updater.idle()
 
